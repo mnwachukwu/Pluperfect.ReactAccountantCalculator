@@ -1,0 +1,10 @@
+# Built output. Consumers take the package by file: dependency and build it themselves.
+dist/
+node_modules/
+
+# Matt's working notes stay on his machine; this repository is public.
+docs/TaskBoard.md
+
+# Vite and Vitest caches
+.vite/
+coverage/

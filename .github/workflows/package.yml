@@ -1,0 +1,140 @@
+name: Package
+
+# Checked on every push, which packs the tarball and zips the same files. A v* tag also attaches both to a GitHub
+# Release for the tag, which is how the package is installed: downloaded, and taken by a file: dependency.
+#
+#     git tag v1.0.0
+#     git push origin v1.0.0
+
+on:
+  push:
+    branches: ['**']
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    name: Test and build
+    runs-on: ubuntu-latest
+
+    steps:
+      # The same majors as Pluperfect.Jwt's client job, which runs green: each is the first on Node 24.
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
+
+      - name: Check the published entry points exist
+        run: |
+          set -euo pipefail
+          for f in dist/index.js dist/index.d.ts dist/styles.css; do
+            test -f "$f" || { echo "missing $f, which package.json exports"; exit 1; }
+          done
+          echo "dist/index.js, dist/index.d.ts, and dist/styles.css present"
+
+      # React and React DOM are peer dependencies. A runtime dependency would resolve through this package's own
+      # node_modules in a consumer that takes it by file:, which is how a second copy of React gets in.
+      - name: Check there are no runtime dependencies
+        run: |
+          set -euo pipefail
+          count=$(node -e "console.log(Object.keys(require('./package.json').dependencies ?? {}).length)")
+          if [ "$count" != "0" ]; then
+            echo "package.json declares $count runtime dependencies; this package must have none"
+            exit 1
+          fi
+          echo "no runtime dependencies"
+
+      - name: Check the tag matches the version
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          set -euo pipefail
+          version=$(node -p "require('./package.json').version")
+          if [ "v$version" != "$GITHUB_REF_NAME" ]; then
+            echo "the tag is $GITHUB_REF_NAME and package.json says $version"
+            exit 1
+          fi
+          echo "tag and version agree: $version"
+
+      # --ignore-scripts, because prepack would build again; the tarball holds the build checked above.
+      - name: Pack
+        id: pack
+        run: |
+          set -euo pipefail
+          file=$(npm pack --ignore-scripts | tail -n 1)
+          echo "file=$file" >> "$GITHUB_OUTPUT"
+          echo "packed $file"
+
+      - name: Check the tarball holds the package and nothing else
+        env:
+          FILE: ${{ steps.pack.outputs.file }}
+        run: |
+          set -euo pipefail
+          contents=$(tar -tzf "$FILE")
+          echo "$contents"
+          for f in package/package.json package/README.md package/LICENSE \
+                   package/dist/index.js package/dist/index.d.ts package/dist/styles.css package/src/index.ts; do
+            grep -qx "$f" <<< "$contents" || { echo "the tarball is missing $f"; exit 1; }
+          done
+          if grep -E '^package/(demo|test|docs)/' <<< "$contents"; then
+            echo "the tarball carries files that are not the package"
+            exit 1
+          fi
+          echo "the tarball holds the package, its source, and nothing else"
+
+      # From the tarball rather than the tree, so the two downloads hold the same files.
+      - name: Zip the same files
+        id: zip
+        env:
+          FILE: ${{ steps.pack.outputs.file }}
+        run: |
+          set -euo pipefail
+          zipped="${FILE%.tgz}.zip"
+          mkdir "$RUNNER_TEMP/zip"
+          tar -xzf "$FILE" -C "$RUNNER_TEMP/zip"
+          mv "$RUNNER_TEMP/zip/package" "$RUNNER_TEMP/zip/react-accountant-calculator"
+          (cd "$RUNNER_TEMP/zip" && zip -qr "$GITHUB_WORKSPACE/$zipped" react-accountant-calculator)
+          unzip -l "$zipped"
+          echo "file=$zipped" >> "$GITHUB_OUTPUT"
+
+      - name: Keep both for the release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: actions/upload-artifact@v7
+        with:
+          name: package
+          path: |
+            ${{ steps.pack.outputs.file }}
+            ${{ steps.zip.outputs.file }}
+          retention-days: 7
+
+  release:
+    name: Release
+    needs: package
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Take the files that were checked
+        uses: actions/download-artifact@v8
+        with:
+          name: package
+
+      # --verify-tag refuses to create the tag, so a release only ever names a tag that was pushed.
+      - name: Attach them to a release for the tag
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh release create "$GITHUB_REF_NAME" ./*.tgz ./*.zip \
+            --repo "$GITHUB_REPOSITORY" --title "$GITHUB_REF_NAME" --generate-notes --verify-tag

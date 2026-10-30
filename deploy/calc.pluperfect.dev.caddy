@@ -1,0 +1,35 @@
+# What serves calc.pluperfect.dev, the demo page.
+#
+# ⚠ A fragment, not a Caddyfile: it goes in /etc/caddy/sites/, which the box's Caddyfile imports. Copied to the box
+# first, then:
+#     sudo install -m 644 /home/matt/calc.pluperfect.dev.caddy /etc/caddy/sites/calc.pluperfect.dev.caddy
+#     sudo caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile
+#     sudo systemctl reload caddy
+#
+# Validate the index rather than this file; that is what catches a fragment that would take the other sites down.
+
+calc.pluperfect.dev {
+	root * /var/www/calc.pluperfect.dev
+
+	encode zstd gzip
+
+	# Vite writes content-hashed names under /assets, so a cached copy is never stale.
+	@versioned path /assets/*
+
+	@unversioned {
+		not path /assets/*
+	}
+
+	header @versioned Cache-Control "public, max-age=31536000, immutable"
+	header @unversioned Cache-Control "no-cache"
+
+	header {
+		Content-Security-Policy "frame-ancestors 'self'"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		-Server
+	}
+
+	# One page and no routes, so there is no SPA fallback: a path that is not a file is a 404.
+	file_server
+}

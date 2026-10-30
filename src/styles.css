@@ -1,0 +1,268 @@
+/*
+ * A plain, retro look. Theme it by overriding these variables on .pac or an ancestor, or style the pac-* classes
+ * directly; leave this file out entirely to start from nothing.
+ */
+.pac {
+  --pac-font: 'Courier New', ui-monospace, monospace;
+  --pac-body: #c4c7cc;
+  --pac-body-edge: #6b6e75;
+  --pac-titlebar: #6b6e75;
+  --pac-titlebar-text: #ffffff;
+  --pac-close: #c62828;
+  --pac-close-text: #ffffff;
+  --pac-screen: #9bbc0f;
+  --pac-screen-text: #0f380f;
+  --pac-screen-muted: #306230;
+  --pac-screen-edge: #4c5a1e;
+  --pac-function-key: #8a8d93;
+  --pac-function-key-text: #ffffff;
+  --pac-key: #ececec;
+  --pac-key-text: #222222;
+  --pac-key-edge: #8d8f94;
+  --pac-operator-key: #5a45a8;
+  --pac-operator-key-text: #ffffff;
+  --pac-equals-key: #9a2257;
+  --pac-equals-key-text: #ffffff;
+  --pac-pressed-highlight: #fff27a;
+  --pac-radius: 4px;
+  --pac-gap: 0.4rem;
+  --pac-z: 2147483000;
+
+  position: fixed;
+  z-index: var(--pac-z);
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: var(--pac-gap);
+  /* A definite size, which the corner handle changes, so the keys can share whatever height there is. */
+  width: 18rem;
+  height: 31rem;
+  min-width: 15rem;
+  min-height: 26rem;
+  max-width: calc(100vw - 1rem);
+  max-height: calc(100vh - 1rem);
+  padding: 0 0.6rem 0.6rem;
+  overflow: hidden;
+  resize: both;
+  container-type: size;
+  border: 3px solid var(--pac-body-edge);
+  border-radius: var(--pac-radius);
+  background: var(--pac-body);
+  box-shadow: 4px 4px 0 rgb(0 0 0 / 0.35);
+  color: var(--pac-key-text);
+  font-family: var(--pac-font);
+}
+
+.pac[hidden] {
+  display: none;
+}
+
+.pac *,
+.pac *::before,
+.pac *::after {
+  box-sizing: inherit;
+}
+
+.pac:focus {
+  outline: none;
+}
+
+.pac-titlebar {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin: 0 -0.6rem;
+  padding: 0.25rem 0.35rem 0.25rem 0.6rem;
+  background: var(--pac-titlebar);
+  color: var(--pac-titlebar-text);
+  cursor: move;
+  touch-action: none;
+  user-select: none;
+}
+
+.pac-title {
+  min-width: 0;
+  overflow: hidden;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.pac-close {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  padding: 0;
+  border: 2px solid var(--pac-titlebar-text);
+  border-radius: var(--pac-radius);
+  background: var(--pac-close);
+  color: var(--pac-close-text);
+  cursor: pointer;
+}
+
+.pac-display {
+  flex: none;
+  padding: 0.35rem 0.5rem;
+  border: 3px solid var(--pac-screen-edge);
+  border-radius: var(--pac-radius);
+  background: var(--pac-screen);
+  color: var(--pac-screen-text);
+}
+
+.pac-eyebrow {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  min-height: 1.1rem;
+  font-size: clamp(0.7rem, 4.5cqi, 0.95rem);
+}
+
+.pac-memory {
+  flex: none;
+  font-weight: 700;
+}
+
+.pac-expression {
+  min-width: 0;
+  color: var(--pac-screen-muted);
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+
+.pac-output-row {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.pac-value {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  font-size: clamp(1.2rem, min(10cqi, 6.5cqh), 3rem);
+  font-weight: 700;
+  line-height: 1.15;
+  text-align: right;
+}
+
+.pac-value-error {
+  font-size: clamp(0.9rem, 6cqi, 1.3rem);
+}
+
+.pac-copy {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  padding: 0;
+  border: 2px solid var(--pac-screen-text);
+  border-radius: var(--pac-radius);
+  background: transparent;
+  color: var(--pac-screen-text);
+  cursor: pointer;
+}
+
+.pac-copy:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+/* The two blocks share the height left over in proportion to their rows, so every row is the same height. */
+.pac-keys {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: calc(var(--pac-gap) * 2);
+  min-height: 0;
+  padding-bottom: 3px;
+}
+
+.pac-functions,
+.pac-pad {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--pac-gap);
+  min-height: 0;
+}
+
+.pac-functions {
+  flex: 3;
+  grid-template-rows: repeat(3, minmax(0, 1fr));
+}
+
+/* A computer's number pad: C where Num Lock sits, + and = two keys tall, 0 two keys wide. */
+.pac-pad {
+  flex: 5;
+  grid-template-rows: repeat(5, minmax(0, 1fr));
+  grid-template-areas:
+    'clear divide multiply subtract'
+    'd7 d8 d9 add'
+    'd4 d5 d6 add'
+    'd1 d2 d3 equals'
+    'd0 d0 decimal equals';
+}
+
+.pac-key-clear { grid-area: clear; }
+.pac-key-divide { grid-area: divide; }
+.pac-key-multiply { grid-area: multiply; }
+.pac-key-subtract { grid-area: subtract; }
+.pac-key-add { grid-area: add; }
+.pac-key-equals { grid-area: equals; }
+.pac-key-decimal { grid-area: decimal; }
+.pac-key-0 { grid-area: d0; }
+.pac-key-1 { grid-area: d1; }
+.pac-key-2 { grid-area: d2; }
+.pac-key-3 { grid-area: d3; }
+.pac-key-4 { grid-area: d4; }
+.pac-key-5 { grid-area: d5; }
+.pac-key-6 { grid-area: d6; }
+.pac-key-7 { grid-area: d7; }
+.pac-key-8 { grid-area: d8; }
+.pac-key-9 { grid-area: d9; }
+
+.pac-key {
+  min-width: 0;
+  min-height: 0;
+  padding: 0;
+  overflow: hidden;
+  border: 2px solid var(--pac-key-edge);
+  border-radius: var(--pac-radius);
+  background: var(--pac-key);
+  box-shadow: 0 3px 0 var(--pac-key-edge);
+  color: var(--pac-key-text);
+  font: inherit;
+  font-size: clamp(0.8rem, min(6.5cqi, 3.8cqh), 2rem);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.pac-key-function {
+  background: var(--pac-function-key);
+  color: var(--pac-function-key-text);
+}
+
+.pac-key-operator {
+  background: var(--pac-operator-key);
+  color: var(--pac-operator-key-text);
+}
+
+.pac-key-equals {
+  background: var(--pac-equals-key);
+  color: var(--pac-equals-key-text);
+}
+
+/* Pushed in, and lit for a moment, whether pressed by mouse, touch, or keyboard. */
+.pac-key:active,
+.pac-key-pressed {
+  box-shadow: inset 0 0 0 2px var(--pac-pressed-highlight), 0 0 6px var(--pac-pressed-highlight);
+  filter: brightness(1.12);
+  transform: translateY(3px);
+}

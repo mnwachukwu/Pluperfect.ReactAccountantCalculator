@@ -1,0 +1,13 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "allowImportingTsExtensions": true,
+    "resolveJsonModule": true,
+    "rootDir": ".",
+    "declaration": false,
+    "declarationMap": false,
+    "types": ["vite/client", "vitest/importMeta", "@testing-library/jest-dom/vitest"]
+  },
+  "include": ["src", "test", "demo", "vite.config.ts", "vitest.config.ts"]
+}

@@ -1,0 +1,113 @@
+name: Site
+
+# Deploys the demo page to calc.pluperfect.dev, and runs only from the button: Actions, Site, Run workflow. Package
+# releases are version tags, in package.yml, and do not deploy the page.
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  # ⚠ Pinned, never ssh-keyscan, which trusts whatever answers. Read from the box over an authenticated session; the
+  # same key Pluperfect.dev's client.yml deploys against.
+  CLIENT_HOST_KEY: client.pluperfect.dev ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOKzGACCxunMwNgsON9U16mcoYn/hrvNccwoSWvNduCk
+
+jobs:
+  build:
+    name: Build and check
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run demo:build
+
+      # Read back after the deploy, to prove the box serves this build rather than an older one.
+      - name: Stamp what it was built from
+        run: |
+          set -euo pipefail
+          printf '{ "site": "%s", "ref": "%s", "built": "%s" }\n' \
+            "$GITHUB_SHA" "$GITHUB_REF_NAME" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > demo/dist/build.json
+          cat demo/dist/build.json
+
+      - name: Keep the build
+        uses: actions/upload-artifact@v7
+        with:
+          name: site
+          path: demo/dist
+          retention-days: 7
+
+  deploy:
+    name: Deploy
+    needs: build
+    runs-on: ubuntu-latest
+
+    # Two rsyncs with --delete into one directory would interleave.
+    concurrency:
+      group: deploy-calc-site
+      cancel-in-progress: false
+
+    steps:
+      # For the Caddy fragment below. Checkout cleans the workspace, so it runs before the download.
+      - uses: actions/checkout@v7
+
+      - name: Take the build that was checked
+        uses: actions/download-artifact@v8
+        with:
+          name: site
+          path: demo/dist
+
+      - name: Trust the machine, and nothing else
+        env:
+          DEPLOY_KEY: ${{ secrets.DEPLOY_KEY }}
+        run: |
+          set -euo pipefail
+          mkdir -p ~/.ssh
+          printf '%s\n' "$DEPLOY_KEY" > ~/.ssh/deploy
+          chmod 600 ~/.ssh/deploy
+          printf '%s\n' "$CLIENT_HOST_KEY" > ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/known_hosts
+
+      # ⚠ CI does not install the fragment. A difference is a question about which side is right, so this stops rather
+      # than copying either way. One ssh connection here and one for rsync: the box limits port 22 to six in thirty
+      # seconds.
+      - name: Check the installed Caddy fragment matches this repository
+        run: |
+          set -euo pipefail
+          ssh -i ~/.ssh/deploy -o IdentitiesOnly=yes deploy-calc@client.pluperfect.dev \
+            'cat /etc/caddy/sites/calc.pluperfect.dev.caddy' > "$RUNNER_TEMP/installed.caddy"
+          if diff -u deploy/calc.pluperfect.dev.caddy "$RUNNER_TEMP/installed.caddy"; then
+            echo "the installed fragment matches this repository"
+          else
+            echo "The fragment Caddy is serving differs from deploy/calc.pluperfect.dev.caddy."
+            echo "Above, '-' is this repository and '+' is the box."
+            exit 1
+          fi
+
+      # ⚠ The trailing slash sends the folder's contents, not the folder. --delete removes whatever this build did not
+      # produce, which is why deploy-calc owns this one directory and nothing else.
+      - name: Send it
+        run: |
+          rsync -az --delete \
+            -e "ssh -i ~/.ssh/deploy -o IdentitiesOnly=yes" \
+            demo/dist/ deploy-calc@client.pluperfect.dev:/var/www/calc.pluperfect.dev/
+
+      - name: Check the site serves this build
+        run: |
+          set -euo pipefail
+          curl -fsS -o /dev/null -w 'page: %{http_code}\n' https://calc.pluperfect.dev/
+          serving=$(curl -fsS https://calc.pluperfect.dev/build.json | sed -n 's/.*"site": *"\([^"]*\)".*/\1/p')
+          if [ "$serving" != "$GITHUB_SHA" ]; then
+            echo "the site is serving '$serving', and this run sent $GITHUB_SHA"
+            exit 1
+          fi
+          echo "the site is serving this build"

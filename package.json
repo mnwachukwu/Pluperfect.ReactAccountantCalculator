@@ -1,0 +1,56 @@
+{
+  "name": "@pluperfect/react-accountant-calculator",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Accountant's Calculator: a floating React calculator that works in decimal money, with precedence, parentheses, powers, square roots, accounting percent, memory, the numpad, and a copyable display.",
+  "license": "MIT",
+  "homepage": "https://calc.pluperfect.dev",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mnwachukwu/Pluperfect.ReactAccountantCalculator.git"
+  },
+  "type": "module",
+  "sideEffects": [
+    "*.css"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./styles.css": "./dist/styles.css"
+  },
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json && node -e \"require('node:fs').cpSync('src/styles.css','dist/styles.css')\"",
+    "clean": "node -e \"require('node:fs').rmSync('dist',{recursive:true,force:true})\"",
+    "typecheck": "tsc -p tsconfig.test.json",
+    "test": "vitest run",
+    "demo": "vite",
+    "demo:build": "vite build",
+    "prepack": "npm run build"
+  },
+  "peerDependencies": {
+    "react": ">=18",
+    "react-dom": ">=18"
+  },
+  "devDependencies": {
+    "@testing-library/dom": "^10.4.2",
+    "@testing-library/jest-dom": "^7.0.1",
+    "@testing-library/react": "^16.3.3",
+    "@testing-library/user-event": "^14.6.7",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.7",
+    "@vitejs/plugin-react": "^6.1.1",
+    "jsdom": "^30.1.3",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.0",
+    "vitest": "^5.0.5"
+  }
+}
