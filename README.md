@@ -1,46 +1,65 @@
 # Accountant's Calculator
 
 [![Package](https://github.com/mnwachukwu/Pluperfect.ReactAccountantCalculator/actions/workflows/package.yml/badge.svg)](https://github.com/mnwachukwu/Pluperfect.ReactAccountantCalculator/actions/workflows/package.yml)
-[![Site](https://github.com/mnwachukwu/Pluperfect.ReactAccountantCalculator/actions/workflows/site.yml/badge.svg)](https://github.com/mnwachukwu/Pluperfect.ReactAccountantCalculator/actions/workflows/site.yml)
 
-Accountant's Calculator is a floating calculator for React that works in money. Every number is decimal, never
-floating point, and every result rounds to cents. It works out expressions with operator precedence and parentheses,
-does accounting percent (100 + 5% is 105.00), keeps a memory, takes the numpad and keyboard anywhere on the page, and
-copies what its display shows.
+A floating calculator component for React that computes in decimal money. Demo:
+[calc.pluperfect.dev](https://calc.pluperfect.dev).
 
-It ships with a plain, retro look meant to be restyled. Every color and size is a CSS variable.
+## Contents
 
-Try it at [calc.pluperfect.dev](https://calc.pluperfect.dev).
+- [Features](#features)
+- [Install](#install)
+- [Usage](#usage)
+- [Props](#props)
+- [Window](#window)
+- [Keyboard](#keyboard)
+- [Arithmetic](#arithmetic)
+- [Memory](#memory)
+- [Display](#display)
+- [Clipboard](#clipboard)
+- [Styling](#styling)
+- [API](#api)
+- [Development](#development)
+- [License](#license)
+
+## Features
+
+- Decimal arithmetic on `BigInt`, no floating point. Results round to 2 places, half away from zero.
+- Operator precedence, parentheses, powers, square roots, and accounting percent (`100 + 5%` is `105.00`).
+- Memory: MS, MR, M+, M−, and MC.
+- Keyboard input anywhere on the page, numpad included, except in editable elements.
+- Copy and paste through the system clipboard.
+- A floating window: portaled to `document.body`, draggable, resizable, and stacked above the page.
+- Themed with CSS custom properties. No runtime dependencies.
 
 ## Install
 
-The package is `@pluperfect/react-accountant-calculator`, and it is not on a registry. Each
-[release](https://github.com/mnwachukwu/Pluperfect.ReactAccountantCalculator/releases) carries it twice, as a `.zip`
-and as a `.tgz` holding the same files. Download either one into a `vendor` folder in your project's folder, the one
-with `package.json` in it, which keeps downloaded packages apart from your own files. Then run the install from the
-project's folder.
+The package is not on a registry. Each [release](https://github.com/mnwachukwu/Pluperfect.ReactAccountantCalculator/releases)
+attaches it in two formats with identical contents:
 
-The `.zip` holds one folder, `react-accountant-calculator`. Unzip it into `vendor`, then:
+| File | Contents | Install command |
+|---|---|---|
+| `pluperfect-react-accountant-calculator-<version>.zip` | One folder, `react-accountant-calculator/` | `npm install ./vendor/react-accountant-calculator` |
+| `pluperfect-react-accountant-calculator-<version>.tgz` | An npm tarball | `npm install ./vendor/pluperfect-react-accountant-calculator-<version>.tgz` |
 
-```bash
-npm install ./vendor/react-accountant-calculator
-```
+1. Put the download in a `vendor/` folder beside your project's `package.json`, unzipping the `.zip` there.
+2. Run the install command from the project folder. It adds a `file:` dependency to `package.json`.
+3. Commit `vendor/`. If `.gitignore` excludes `dist/`, re-include the package's:
 
-Or save the `.tgz` in `vendor`, then:
+   ```gitignore
+   dist/
+   !vendor/react-accountant-calculator/dist/
+   ```
 
-```bash
-npm install ./vendor/pluperfect-react-accountant-calculator-1.0.0.tgz
-```
+To upgrade, install the newer file and delete the old one.
 
-Either adds it to `package.json` as a `file:` dependency, so commit the `vendor` folder with your project. If your
-`.gitignore` ignores `dist/`, make an exception for the unzipped folder's, or a fresh clone installs it without its
-code. To upgrade, install the newer download the same way and delete the old one.
+| Requirement | |
+|---|---|
+| Peer dependencies | `react` and `react-dom` 18 or later |
+| Runtime dependencies | None |
+| Module format | ES modules, with TypeScript declarations |
 
-React and React DOM 18 or later are peer dependencies. It has no other dependencies.
-
-## Use
-
-The host owns whether it shows. Pass `open`, and a setter as `onOpenChange` so its close button can hide it:
+## Usage
 
 ```tsx
 import { useState } from 'react'
@@ -58,108 +77,152 @@ export function Toolbar() {
 }
 ```
 
-The calculator renders into `document.body`, so it sits above everything on the page. Closing it hides it without
-unmounting it, so its number, memory, place, and size are the same when it opens again.
+Visibility is controlled by the host. Closing hides the window without unmounting it, so the value, memory, position,
+and size persist across toggles.
 
-| Prop | | |
+## Props
+
+| Prop | Type | Default | Description |
+|---|---|---|---|
+| `open` | `boolean` | Required | Whether the window shows. |
+| `onOpenChange` | `(open: boolean) => void` | | Called with `false` when the close button is pressed. |
+| `title` | `string` | `'Calculator'` | Title bar text and the dialog's accessible name. |
+| `defaultPosition` | `{ x: number; y: number }` | Top right, 16px inset | Initial top-left corner, in viewport pixels. |
+| `locale` | `string` | The browser's | Grouping and decimal separator, for display and paste. |
+| `onResult` | `(value: string, expression: string) => void` | | Called on each `=`. |
+| `className` | `string` | | Added to the root element. |
+
+`onResult` arguments:
+
+| Argument | Format | Example |
 |---|---|---|
-| `open` | `boolean` | Whether it shows. Required. |
-| `onOpenChange` | `(open: boolean) => void` | Called with `false` when its close button is pressed. |
-| `title` | `string` | The title bar's text and the window's accessible name. `Calculator` by default. |
-| `defaultPosition` | `{ x, y }` | Where its top-left corner first appears, in pixels. The top-right of the viewport by default. |
-| `locale` | `string` | The locale numbers are grouped in, and its decimal separator. The browser's own by default. |
-| `onResult` | `(value: string, expression: string) => void` | Called with each value `=` works out, and the expression it came from. |
-| `className` | `string` | Added to the window, for styling. |
+| `value` | Fixed 2 places, no grouping, `.` as the separator | `"-1234.50"` |
+| `expression` | As the display writes it, in `locale` | `"100.00 + 5.00"` |
 
-`onResult`'s value is decimal text with two places and no grouping, such as `-1234.50`. It is text rather than a
-`number` so the value reaches the host exactly; parse it with whatever decimal type the host uses. The expression is
-written as the display writes it, such as `100.00 + 5.00`.
+`value` is a string so it reaches the host without passing through a `number`.
 
-## The window
+## Window
 
-- **Move it** by dragging its title bar, with a mouse or a finger. At least part of it always stays on screen.
-- **Resize it** from its bottom-right corner. The keys and the display grow and shrink with it, and every key stays
-  on screen at the smallest size.
-- **Close it** with the red × in its title bar.
-
-The keys sit in two blocks. Above are the function keys: MS, MR, M+, and M− in the top row, then MC and CE side by
-side, parentheses, √, xʸ, %, and ±. Below is a number pad laid out like a computer's, with C where Num Lock sits, a
-two-wide 0, and a two-tall + and =.
-
-A key shows as pressed, with a highlight, whether it was clicked or typed.
-
-## Keys
-
-While it is open, it takes key presses anywhere on the page, except while focus is in a text field, a text area, a
-select, or anything editable. Other than copy and paste, it ignores any key held with Ctrl, Alt, or ⌘.
-
-| Key | Does |
+| Behavior | Detail |
 |---|---|
-| `0`–`9`, `.` | Enter a number. The numpad works with Num Lock on or off, and its decimal key works in comma locales. |
-| `+` `-` `*` `/` | Add, subtract, multiply, divide. `x` also multiplies. |
-| `^` | Raise to a power. |
-| `@` | Square root. |
-| `(` `)` | Parentheses. |
-| `%` | Percent. |
-| `Enter`, `=` | Work it out. |
-| `Backspace` | Delete the last digit typed. |
-| `Escape` | C: clear everything but the memory. |
-| `F9` | Change the sign. |
-| `M` held, then `+`, `-`, `S`, `R`, or `C` | M+, M−, MS, MR, or MC. Other keys work as usual while M is held. |
-| `Ctrl`+`C`, `⌘`+`C` | Copy the value, as the copy button does. |
-| `Ctrl`+`V`, `⌘`+`V` | Paste a number into the calculator. |
+| Move | Drag the title bar with a mouse, pen, or touch. At least 80px stays on screen. |
+| Resize | Drag the bottom-right corner. Minimum 15rem × 26rem, maximum the viewport less 1rem. Keys scale with the window. |
+| Close | The × in the title bar calls `onOpenChange(false)`. |
+| Stacking | `z-index: var(--pac-z)`, `2147483000` by default. |
+| Pressed state | A clicked or typed key carries `.pac-key-pressed` for 150 ms. |
 
-CE, which clears the whole number being entered, is a button only.
+Layout:
 
-Copy and paste go to the calculator only while no field has focus and no text on the page is selected, so copying
-text from the page still works. A paste takes one number, rounded to cents, as MR would recall it: the locale's
-grouping and decimal point, a currency symbol before or after, and a minus sign or accounting parentheses are all
-read, so `$1,234.567` pastes as 1,234.57 and `(1,234.56)` as −1,234.56. Anything else, or a number with more than 15
-digits before the point, is ignored.
+```
+MS  MR  M+  M−      function keys
+MC  CE  (   )
+√   xʸ  %   ±
 
-## How it calculates
+C   ÷   ×   −       number pad
+7   8   9   +
+4   5   6   +
+1   2   3   =
+0   0   .   =
+```
 
-- **Money.** Numbers are decimal, so `0.1 + 0.2` is 0.30 exactly. An entry takes up to two decimal places and 15
-  digits before the point. Within one calculation it works to 20 decimal places, then rounds the result to cents, half
-  away from zero: `1 ÷ 8` is 0.13 and `−1 ÷ 8` is −0.13. The next calculation continues from the cents shown, so
-  `10 ÷ 3 × 3 =` is 10.00, but `10 ÷ 3 =` followed by `× 3 =` is 9.99.
-- **Precedence.** Parentheses first, then powers, then × and ÷, then + and −. `2 + 3 × 4` is 14.00. Powers group
-  right to left: `2 ^ 3 ^ 2` is 512.00.
-- **Powers** must be whole numbers, negative ones included: `2 ^ −1` is 0.50. `1000 × (1 + 0.05) ^ 3` is 1,157.63.
-- **Accounting percent.** Preceded by + or −, a percent is of everything ahead of that operator: `100 + 5%` is 105.00,
-  `100 − 5%` is 95.00, and `50 + 50 + 10%` is 110.00. Preceded by ×, ÷, or a power, or by nothing, it is the number
-  divided by 100: `100 × 5%` is 5.00. The display shows the amount the percent worked out to.
-- **Square root** applies at once to the number just entered, a parenthesis group just closed, or a result.
-- **Equals again** repeats the last operation: `100 + 5 = = =` is 115.00.
-- **Following a result**, a digit starts a new calculation and an operator continues from the result.
-- **Shortcuts.** A number beside a parenthesis multiplies: `2(3)` is 6.00. Unclosed parentheses close on `=`. A second
-  operator replaces the first.
-- **Errors.** Dividing by zero, the square root of a negative number, a power that is not whole, and a result with
-  more than 15 digits before the point show a message until the next key.
+## Keyboard
+
+While the window is open, `keydown` on `window` is captured unless the target is a text-like `<input>`, a
+`<textarea>`, a `<select>`, or a `contenteditable` element. Keys held with Ctrl, Alt, or ⌘ are not captured, apart from
+copy and paste ([Clipboard](#clipboard)).
+
+| Key | Action |
+|---|---|
+| `0`–`9`, `.` | Digits and the decimal point |
+| `+` `-` `*` `/` | Operators. `x` also multiplies. |
+| `^` | Power |
+| `@` | Square root |
+| `(` `)` | Parentheses |
+| `%` | Percent |
+| `Enter`, `=` | Evaluate |
+| `Backspace` | Delete the last digit typed |
+| `Escape` | C |
+| `F9` | Change sign |
+| `M` held with `S`, `R`, `+`, `-`, or `C` | MS, MR, M+, M−, or MC |
+
+The numpad is read by `event.code`, so it works with Num Lock off, and its decimal key enters a decimal point in any
+locale. CE and Delete have no binding.
+
+## Arithmetic
+
+| Rule | Behavior | Example |
+|---|---|---|
+| Precision | 20 decimal places within a calculation | `0.1 + 0.2 =` → `0.30` |
+| Rounding | Each result rounds to 2 places, half away from zero | `1 ÷ 8 =` → `0.13`, `-1 ÷ 8 =` → `-0.13` |
+| Chaining | A calculation continues from the rounded result | `10 ÷ 3 =` then `× 3 =` → `9.99` |
+| Entry limits | 2 decimal places, 15 integer digits | |
+| Precedence | `( )`, then `^`, then `×` `÷`, then `+` `−` | `2 + 3 × 4 =` → `14.00` |
+| Associativity | `^` is right-associative | `2 ^ 3 ^ 2 =` → `512.00` |
+| Powers | Integer exponents only; negatives allowed | `2 ^ -1 =` → `0.50` |
+| Percent after `+` or `−` | That percent of the total to its left | `100 + 5% =` → `105.00` |
+| Percent otherwise | Divides by 100 | `100 × 5% =` → `5.00` |
+| Square root | Applies at once to the entry, a closed group, or a result | `9 √` → `3.00` |
+| Repeated `=` | Reapplies the last operator and operand | `100 + 5 = = =` → `115.00` |
+| After a result | A digit starts a new calculation; an operator continues it | |
+| Implicit multiplication | A number beside a parenthesis | `2(3) =` → `6.00` |
+| Unclosed parentheses | Closed on `=` | `(2 + 3 =` → `5.00` |
+| Repeated operator | The second replaces the first | `5 + × 2 =` → `10.00` |
+
+| Error | Cause |
+|---|---|
+| `Cannot divide by zero` | A division by zero, or a negative power of zero |
+| `Invalid input` | The square root of a negative number |
+| `Powers must be whole numbers` | A fractional exponent |
+| `Result is too large` | More than 15 integer digits |
+
+An error replaces the value until the next key, which starts a new calculation. Memory is kept.
 
 ## Memory
 
-| Button | Keys | Does |
+| Button | Keys | Effect |
 |---|---|---|
-| MS | M with S | Store the value in the memory, replacing what was there. |
-| MR | M with R | Recall the memory as the number being entered. A digit typed next replaces it. |
-| M+ | M with + | Add the value to the memory. |
-| M− | M with - | Subtract the value from the memory. |
-| MC | M with C | Clear the memory. |
+| MS | M + S | Store the value |
+| MR | M + R | Recall the memory as the entry; the next digit replaces it |
+| M+ | M + `+` | Add the value to the memory |
+| M− | M + `-` | Subtract the value from the memory |
+| MC | M + C | Clear the memory |
 
-M+, M−, and MS first work out an unfinished expression, as `=` would, and use its result. An M on the display shows
-that the memory holds a number. C and errors leave the memory alone.
+MS, M+, and M− evaluate a pending expression first, as `=` would. C and errors leave the memory intact. `.pac-memory`
+shows `M` while the memory holds a value.
 
-## The display
+## Display
 
-Every number shows as money, with two decimal places and the locale's grouping, starting at 0.00. A number being typed
-shows the same way: typing `12` shows 12.00. While no number is being entered, such as just after an operator, the value
-shows 0.00. The line above shows the expression, in the same format. The copy button
-beside the value copies exactly what the value shows, such as `1,234.50`.
+| Line | Content |
+|---|---|
+| Value | The entry, result, or error. Money format: 2 places with the locale's grouping. `0.00` when nothing is entered. |
+| Expression | The pending expression, or the evaluated one followed by `=`, in the same format |
+
+## Clipboard
+
+| Action | Trigger | Behavior |
+|---|---|---|
+| Copy | The copy button, Ctrl+C, or ⌘C | Writes the value as displayed, such as `1,234.50`, as `text/plain` |
+| Paste | Ctrl+V or ⌘V | Parses one number with `parseMoney` and enters it as MR would |
+
+Ctrl+C and Ctrl+V are handled only while focus is outside editable elements and no text is selected, so the page's
+own copy and paste keep working.
+
+Paste accepts the locale's grouping, which must be the locale's own or groups of three, and its decimal separator. It
+also accepts a currency symbol before or after the number, and a minus sign or accounting parentheses. Values round
+to 2 places. Anything else, or more than 15 integer digits, is ignored.
+
+| Clipboard | Locale | Entered |
+|---|---|---|
+| `1,234.567` | `en-US` | `1,234.57` |
+| `$1,234.56` | `en-US` | `1,234.56` |
+| `(1,234.56)` | `en-US` | `-1,234.56` |
+| `-$5` | `en-US` | `-5.00` |
+| `1.234,56 €` | `de-DE` | `1.234,56` |
+| `12,34` | `en-US` | Ignored |
 
 ## Styling
 
-`styles.css` is the whole look. Override its variables on `.pac`, or on any ancestor, to restyle it:
+`styles.css` is the entire default theme. Override its custom properties on `.pac` or an ancestor:
 
 ```css
 .my-calculator {
@@ -171,75 +234,90 @@ beside the value copies exactly what the value shows, such as `1,234.50`.
 }
 ```
 
-| Variable | Styles |
+| Property | Applies to |
 |---|---|
 | `--pac-font` | Every font in the window |
-| `--pac-body`, `--pac-body-edge` | The window and its border |
-| `--pac-titlebar`, `--pac-titlebar-text` | The title bar |
-| `--pac-close`, `--pac-close-text` | The close button |
-| `--pac-screen`, `--pac-screen-text`, `--pac-screen-muted`, `--pac-screen-edge` | The display |
+| `--pac-body`, `--pac-body-edge` | Window background and border |
+| `--pac-titlebar`, `--pac-titlebar-text` | Title bar |
+| `--pac-close`, `--pac-close-text` | Close button |
+| `--pac-screen`, `--pac-screen-text`, `--pac-screen-muted`, `--pac-screen-edge` | Display |
 | `--pac-key`, `--pac-key-text` | Digits and the decimal point |
 | `--pac-function-key`, `--pac-function-key-text` | Memory keys, C, CE, parentheses, √, xʸ, %, ± |
 | `--pac-operator-key`, `--pac-operator-key-text` | ÷ × − + |
 | `--pac-equals-key`, `--pac-equals-key-text` | = |
-| `--pac-key-edge` | The raised edge under every key |
-| `--pac-pressed-highlight` | The glow on a key being pressed |
-| `--pac-radius`, `--pac-gap` | Corner rounding and spacing |
-| `--pac-z` | The window's stacking order |
+| `--pac-key-edge` | Raised edge under every key |
+| `--pac-pressed-highlight` | Pressed-key glow |
+| `--pac-radius`, `--pac-gap` | Corner radius and spacing |
+| `--pac-z` | Stacking order |
 
-For more than colors, style the classes: `pac`, `pac-titlebar`, `pac-title`, `pac-close`, `pac-display`,
-`pac-eyebrow`, `pac-memory`, `pac-expression`, `pac-output-row`, `pac-value`, `pac-value-error`, `pac-copy`,
-`pac-keys`, `pac-functions`, `pac-pad`, and `pac-key`. Each key also has `pac-key-function`, `pac-key-pad`,
-`pac-key-operator`, or `pac-key-equals`, a class naming it such as `pac-key-add` or `pac-key-7`, and
-`pac-key-pressed` while it shows as pressed. Leave `styles.css` out to start from no styling at all.
+| Class | Element |
+|---|---|
+| `pac` | Root, with `className` appended |
+| `pac-titlebar`, `pac-title`, `pac-close` | Title bar, its text, the close button |
+| `pac-display`, `pac-eyebrow`, `pac-memory`, `pac-expression` | Display, its top line, the memory indicator, the expression |
+| `pac-output-row`, `pac-value`, `pac-value-error`, `pac-copy` | Value row, the value, the value in an error, the copy button |
+| `pac-keys`, `pac-functions`, `pac-pad` | Both key blocks, the function block, the number pad |
+| `pac-key` | Every key |
+| `pac-key-function`, `pac-key-pad`, `pac-key-operator`, `pac-key-equals` | A key's kind |
+| `pac-key-<id>` | One key: `ms`, `mr`, `m-plus`, `m-minus`, `mc`, `clear-entry`, `open`, `close`, `sqrt`, `power`, `percent`, `sign`, `clear`, `divide`, `multiply`, `subtract`, `add`, `equals`, `decimal`, `0`–`9` |
+| `pac-key-pressed` | A key showing as pressed |
 
-## Without the window
+Leave out `styles.css` to start unstyled.
 
-`useAccountantCalculator()` returns the state, a `press(key)` function, and an `enter(value)` function for a whole
-value such as a pasted one, for a calculator with your own buttons. `pressKey(state, key)` and
-`enterValue(state, value)` are the engine itself, pure functions with no React in them, and `screenOf(state, locale)`
-turns a state into the text a display shows. `Decimal` is the number type the engine works in; `formatMoney(value,
-locale)` shows one as money, and `parseMoney(text, locale)` reads one back from pasted text, or gives `null`.
-`keyFromEvent(event, memoryHeld)` turns a key press into a calculator key, and `isMemoryHold(event)` says whether a
-key is the M that turns on the memory keys.
+## API
 
-## Develop
+Everything is exported from `@pluperfect/react-accountant-calculator`.
 
-```bash
-npm install
+| Export | Signature | Notes |
+|---|---|---|
+| `AccountantCalculator` | `(props: AccountantCalculatorProps) => ReactPortal \| null` | The window, portaled to `document.body`. `null` without a DOM. |
+| `useAccountantCalculator` | `(options?: { onResult?, locale? }) => { state, press, enter }` | State for custom UIs. `press(key: CalculatorKey)`, `enter(value: Decimal)`. |
+| `pressKey` | `(state: CalculatorState, key: CalculatorKey) => CalculatorState` | The engine: a pure reducer. |
+| `enterValue` | `(state: CalculatorState, value: Decimal) => CalculatorState` | Enters a whole value as MR does, rounded to 2 places. |
+| `evaluate` | `(tokens: Token[]) => Decimal` | Unrounded. Throws on an error. |
+| `initialCalculatorState` | `CalculatorState` | |
+| `MONEY_PLACES` | `2` | |
+| `screenOf` | `(state: CalculatorState, locale?: string) => Screen` | `{ expression, value, isError, memory }` |
+| `formatMoney` | `(value: Decimal, locale?: string) => string` | |
+| `parseMoney` | `(text: string, locale?: string) => Decimal \| null` | Paste parsing, rounded to 2 places. |
+| `keyFromEvent` | `(event: Pick<KeyboardEvent, 'key' \| 'code' \| 'ctrlKey' \| 'metaKey' \| 'altKey'>, memoryHeld?: boolean) => CalculatorKey \| null` | |
+| `isMemoryHold` | `(event: Pick<KeyboardEvent, 'key'>) => boolean` | Whether the key is M. |
+| `Decimal` | class | See below. |
+
+```ts
+type CalculatorKey =
+  | '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' | '.'
+  | '+' | '-' | '*' | '/' | '^' | '(' | ')' | '=' | '%' | 'sqrt' | '+/-'
+  | 'MS' | 'MR' | 'M+' | 'M-' | 'MC' | 'backspace' | 'C' | 'CE'
 ```
 
-```bash
-npm test
-```
+`Decimal` is immutable: `units × 10^-scale`, with `units` a `bigint`.
 
-```bash
-npm run typecheck
-```
+| Member | |
+|---|---|
+| `Decimal.parse(text)`, `Decimal.of(units, scale?)` | Construction. `parse` takes `-?\d*(\.\d*)?` and throws `RangeError` otherwise. |
+| `Decimal.ZERO`, `Decimal.ONE`, `Decimal.HUNDRED` | Constants |
+| `plus`, `minus`, `times`, `dividedBy`, `negated()` | Arithmetic. `times` and `dividedBy` round to 20 places; `dividedBy` throws `RangeError` on zero. |
+| `squareRoot()`, `toPower(exponent: bigint)` | 20 places. `squareRoot` throws `RangeError` on a negative. |
+| `roundTo(places)` | Half away from zero |
+| `isZero()`, `isNegative()`, `isWhole()`, `integerDigits()` | Queries |
+| `toFixed(places)`, `toString()` | Text without grouping |
 
-```bash
-npm run build
-```
+Also exported as types: `AccountantCalculatorProps`, `Position`, `UseAccountantCalculatorOptions`, `CalculatorState`,
+`Digit`, `MemoryKey`, `Operator`, `Token`, and `Screen`.
 
-`npm run demo` serves a page to try it on, and `npm run demo:build` builds that page into `demo/dist` as a static
-site. The Site workflow deploys it to calc.pluperfect.dev, and runs only from its Run workflow button in the Actions
-tab. `npm pack` makes the same file a release carries, to try in another project before releasing.
+## Development
 
-## Release
+Node 24.
 
-Set `version` in `package.json`, then push a tag for it:
-
-```bash
-git tag v1.0.0
-```
-
-```bash
-git push origin v1.0.0
-```
-
-The Package workflow checks that the tag matches the version, tests and builds, packs the tarball, checks it holds the
-package and its source and nothing else, zips the same files, and attaches both to a GitHub Release for the tag.
+| Command | Does |
+|---|---|
+| `npm install` | Install dependencies |
+| `npm test` | Vitest, on jsdom |
+| `npm run typecheck` | `tsc` over the source, tests, and demo |
+| `npm run build` | `dist/`: ES modules, declarations, and `styles.css` |
+| `npm run demo` | The demo page, on Vite's dev server |
 
 ## License
 
-MIT
+[MIT](LICENSE)
