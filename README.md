@@ -2,7 +2,7 @@
 
 [![Package](https://github.com/mnwachukwu/Pluperfect.ReactAccountantCalculator/actions/workflows/package.yml/badge.svg)](https://github.com/mnwachukwu/Pluperfect.ReactAccountantCalculator/actions/workflows/package.yml)
 
-A floating calculator component for React that computes in decimal money. Demo:
+A floating calculator component for React tuned to the needs of accountants. Demo:
 [calc.pluperfect.dev](https://calc.pluperfect.dev).
 
 ## Contents

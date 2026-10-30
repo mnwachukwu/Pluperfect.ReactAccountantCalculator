@@ -1,7 +1,7 @@
 name: Site
 
 # Deploys the demo page to calc.pluperfect.dev, and runs only from the button: Actions, Site, Run workflow. Package
-# releases are version tags, in package.yml, and do not deploy the page.
+# releases are version tags, in package.yml, and do not deploy the page; the page reads the latest release from GitHub.
 
 on:
   workflow_dispatch:

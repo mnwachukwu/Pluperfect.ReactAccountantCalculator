@@ -2,7 +2,7 @@
   "name": "@pluperfect/react-accountant-calculator",
   "version": "1.0.0",
   "private": true,
-  "description": "Accountant's Calculator: a floating React calculator that works in decimal money, with precedence, parentheses, powers, square roots, accounting percent, memory, the numpad, and a copyable display.",
+  "description": "A floating calculator component for React tuned to the needs of accountants.",
   "license": "MIT",
   "homepage": "https://calc.pluperfect.dev",
   "repository": {
@@ -32,6 +32,7 @@
     "test": "vitest run",
     "demo": "vite",
     "demo:build": "vite build",
+    "og": "node scripts/og.ts",
     "prepack": "npm run build"
   },
   "peerDependencies": {
@@ -43,6 +44,7 @@
     "@testing-library/jest-dom": "^7.0.1",
     "@testing-library/react": "^16.3.3",
     "@testing-library/user-event": "^14.6.7",
+    "@types/node": "^24.19.2",
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.7",
     "@vitejs/plugin-react": "^6.1.1",

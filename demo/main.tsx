@@ -1,6 +1,5 @@
 import { StrictMode, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 import { createRoot } from 'react-dom/client'
-import { version } from '../package.json'
 import { AccountantCalculator, Decimal, formatMoney, type Position } from '../src/index.ts'
 import '../src/styles.css'
 import './demo.css'
@@ -8,7 +7,7 @@ import './demo.css'
 const SOURCE = 'https://github.com/mnwachukwu/Pluperfect.ReactAccountantCalculator'
 /** Redirects to the newest release, so it needs no rebuild when one ships. */
 const LATEST = `${SOURCE}/releases/latest`
-/** Read when the page loads, for the download links, which name a tag. Unauthenticated: 60 requests an hour per IP. */
+/** Read when the page loads, for the version and the download links. Unauthenticated: 60 requests an hour per IP. */
 const LATEST_API = 'https://api.github.com/repos/mnwachukwu/Pluperfect.ReactAccountantCalculator/releases/latest'
 
 type Asset = { name: string; browser_download_url: string }
@@ -161,12 +160,9 @@ function Demo() {
 
       <header className="hero">
         <div className="hero-text">
-          <p className="chip"><span className="chip-dot" aria-hidden="true" />React component · v{version} · MIT</p>
+          <p className="chip"><span className="chip-dot" aria-hidden="true" />React 18+{latest.status === 'ready' && ` · ${latest.tag}`} · MIT</p>
           <h1>Accountant's <span className="shine">Calculator</span></h1>
-          <p className="lede">
-            A floating calculator for React that works in money. Every number is decimal, never floating point, and
-            every result rounds to cents.
-          </p>
+          <p className="lede">A floating calculator component for React tuned to the needs of accountants.</p>
           <div className="actions">
             <a className="button button-primary" href="#install">Add it to your app</a>
             <a className="button button-ghost" href={SOURCE}>Source on GitHub</a>

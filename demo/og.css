@@ -1,0 +1,49 @@
+/* The Open Graph card, at the 1200 by 630 every link preview reads. Held still, so each drawing is the same. */
+html,
+body {
+  width: 1200px;
+  height: 630px;
+  overflow: hidden;
+}
+
+.shine,
+body::after {
+  animation: none;
+}
+
+.og {
+  box-sizing: border-box;
+  width: 700px;
+  height: 630px;
+  padding: 64px 0 0 84px;
+  color: var(--text);
+  font-family: var(--sans);
+}
+
+.og .chip {
+  margin-bottom: 28px;
+  font-size: 20px;
+}
+
+.og h1 {
+  font-size: 84px;
+}
+
+.og-lede {
+  margin: 28px 0 0;
+  color: var(--muted);
+  font-size: 26px;
+  line-height: 1.45;
+}
+
+.og-url {
+  margin: 32px 0 0;
+  color: var(--lime);
+  font: 600 22px var(--mono);
+}
+
+/* Larger than its default, and placed at the right edge by its defaultPosition. */
+.pac.og-calc {
+  width: 21rem;
+  height: 34rem;
+}
