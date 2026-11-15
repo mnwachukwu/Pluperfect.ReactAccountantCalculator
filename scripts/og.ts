@@ -39,11 +39,11 @@ mkdirSync(dirname(out), { recursive: true })
 const server = await createServer({
   configFile: join(root, 'vite.config.ts'),
   root: join(root, 'demo'),
-  server: { port: 5199 },
+  server: { port: 6182 },
   logLevel: 'warn',
 })
 await server.listen()
-const page = new URL('og.html', server.resolvedUrls?.local[0] ?? 'http://localhost:5199/').href
+const page = new URL('og.html', server.resolvedUrls?.local[0] ?? 'http://localhost:6182/').href
 const profile = mkdtempSync(join(tmpdir(), 'og-'))
 
 let said = ''
