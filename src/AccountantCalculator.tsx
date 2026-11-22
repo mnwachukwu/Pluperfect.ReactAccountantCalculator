@@ -98,6 +98,8 @@ export function AccountantCalculator({
   const { state, press, enter } = useAccountantCalculator({ onResult, locale })
   const root = useRef<HTMLDivElement>(null)
   const [position, setPosition] = useState<Position | null>(defaultPosition ?? null)
+  // Where it was put. A smaller window clamps only what is shown, so it returns here when there is room again.
+  const placed = useRef<Position | null>(defaultPosition ?? null)
   const [copied, setCopied] = useState<'Copied' | 'Could not copy' | null>(null)
   const [pressed, setPressed] = useState<{ key: CalculatorKey } | null>(null)
   const drag = useRef<{ pointer: Position; from: Position } | null>(null)
@@ -114,7 +116,8 @@ export function AccountantCalculator({
   // The first time it opens, it takes the top-right corner unless told otherwise.
   useLayoutEffect(() => {
     if (!open || position || !root.current) return
-    setPosition({ x: window.innerWidth - root.current.offsetWidth - MARGIN, y: MARGIN })
+    placed.current = { x: window.innerWidth - root.current.offsetWidth - MARGIN, y: MARGIN }
+    setPosition(placed.current)
   }, [open, position])
 
   useEffect(() => {
@@ -142,7 +145,12 @@ export function AccountantCalculator({
     const onBlur = () => {
       memoryHeld = false
     }
-    const onResize = () => setPosition((p) => (p && root.current ? clamp(p, root.current.offsetWidth) : p))
+    // A window too small to hold the title bar, as one being captured or minimized can report, is not a place to move to.
+    const onResize = () => {
+      const p = placed.current
+      if (!p || !root.current || window.innerWidth < KEEP_VISIBLE || window.innerHeight < KEEP_VISIBLE) return
+      setPosition(clamp(p, root.current.offsetWidth))
+    }
     window.addEventListener('keydown', onKey)
     window.addEventListener('keyup', onKeyUp)
     window.addEventListener('blur', onBlur)
@@ -211,7 +219,9 @@ export function AccountantCalculator({
   function moveDrag(event: ReactPointerEvent<HTMLDivElement>) {
     const d = drag.current
     if (!d || !root.current) return
-    setPosition(clamp({ x: d.from.x + event.clientX - d.pointer.x, y: d.from.y + event.clientY - d.pointer.y }, root.current.offsetWidth))
+    placed.current = clamp({ x: d.from.x + event.clientX - d.pointer.x, y: d.from.y + event.clientY - d.pointer.y },
+      root.current.offsetWidth)
+    setPosition(placed.current)
   }
 
   function endDrag() {

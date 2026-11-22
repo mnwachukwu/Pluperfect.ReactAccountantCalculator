@@ -164,4 +164,26 @@ describe('AccountantCalculator', () => {
       expect(button.title.trim()).not.toBe('')
     }
   })
+
+  it('stays where it was put when the window briefly reports no size', () => {
+    render(<AccountantCalculator open locale="en-US" defaultPosition={{ x: 600, y: 120 }} />)
+    resizeTo(1, 1)
+    resizeTo(1024, 768)
+    expect(screen.getByRole('dialog')).toHaveStyle({ left: '600px', top: '120px' })
+  })
+
+  it('stays reachable in a narrower window, and goes back where it was put in a wider one', () => {
+    render(<AccountantCalculator open locale="en-US" defaultPosition={{ x: 600, y: 120 }} />)
+    resizeTo(400, 768)
+    expect(screen.getByRole('dialog')).toHaveStyle({ left: '320px', top: '120px' })
+    resizeTo(1024, 768)
+    expect(screen.getByRole('dialog')).toHaveStyle({ left: '600px', top: '120px' })
+  })
 })
+
+function resizeTo(width: number, height: number) {
+  act(() => {
+    Object.assign(window, { innerWidth: width, innerHeight: height })
+    window.dispatchEvent(new Event('resize'))
+  })
+}
